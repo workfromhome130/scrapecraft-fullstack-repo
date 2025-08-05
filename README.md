@@ -23,24 +23,27 @@ ScrapeCraft is a web-based scraping editor similar to Cursor but specialized for
 ## Prerequisites
 
 - Docker and Docker Compose
-- OpenRouter API key
-- ScrapeGraphAI API key
+- OpenRouter API key (Get it from [OpenRouter](https://openrouter.ai/keys))
+- ScrapeGraphAI API key (Get it from [ScrapeGraphAI](https://scrapegraphai.com/auth/login))
 
-## Quick Start
+## Quick Start with Docker
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/ScrapeGraphAI/scrapecraft.git
    cd scrapecraft
    ```
 
 2. **Set up environment variables**
    ```bash
    cp .env.example .env
-   # Edit .env with your API keys
    ```
+   
+   Edit the `.env` file and add your API keys:
+   - `OPENROUTER_API_KEY`: Get from [OpenRouter](https://openrouter.ai/keys)
+   - `SCRAPEGRAPH_API_KEY`: Get from [ScrapeGraphAI](https://scrapegraphai.com/auth/login)
 
-3. **Start the application**
+3. **Start the application with Docker**
    ```bash
    docker compose up -d
    ```
@@ -50,13 +53,20 @@ ScrapeCraft is a web-based scraping editor similar to Cursor but specialized for
    - API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
 
-## Development
+5. **Stop the application**
+   ```bash
+   docker compose down
+   ```
+
+## Development Mode
+
+If you want to run the application in development mode without Docker:
 
 ### Backend Development
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend Development
@@ -94,13 +104,13 @@ The application includes Watchtower for automatic updates:
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| OPENROUTER_API_KEY | Your OpenRouter API key |
-| SCRAPEGRAPH_API_KEY | Your ScrapeGraphAI API key |
-| JWT_SECRET | Secret key for JWT tokens |
-| DATABASE_URL | PostgreSQL connection string |
-| REDIS_URL | Redis connection string |
+| Variable | Description | How to Get |
+|----------|-------------|------------|
+| OPENROUTER_API_KEY | Your OpenRouter API key | [Get API Key](https://openrouter.ai/keys) |
+| SCRAPEGRAPH_API_KEY | Your ScrapeGraphAI API key | [Get API Key](https://scrapegraphai.com/auth/login) |
+| JWT_SECRET | Secret key for JWT tokens | Generate a random string |
+| DATABASE_URL | PostgreSQL connection string | Auto-configured with Docker |
+| REDIS_URL | Redis connection string | Auto-configured with Docker |
 
 ## License
 
