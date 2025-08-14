@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import os
 import json
+import re
 from datetime import datetime
 
 from app.config import settings
@@ -57,13 +58,27 @@ async def execute_pipeline(
         # Create temporary Python file with the code
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
             # Inject the API key and URLs into the code
+            # Replace API key placeholder and ensure URLS is set
             modified_code = request.code.replace(
-                '"your-scrapegraph-api-key"',
+                '"your-api-key-here"',
                 f'"{api_key}"'
             ).replace(
-                '["url1", "url2"]',
-                json.dumps(request.urls)
+                'API_KEY = "your-api-key-here"',
+                f'API_KEY = "{api_key}"'
             )
+            
+            # If URLS is not defined in the code, add it
+            if 'URLS = ' not in modified_code:
+                # Add URLS definition before the main block
+                modified_code = f'URLS = {json.dumps(request.urls)}\n' + modified_code
+            
+            # Ensure API_KEY is defined if not present
+            if 'API_KEY = ' not in modified_code:
+                modified_code = f'API_KEY = "{api_key}"\n' + modified_code
+            
+            # Extract function name from code
+            func_match = re.search(r'async def (\w+)\(', modified_code)
+            func_name = func_match.group(1) if func_match else 'scrape_pipeline'
             
             # Add result capture logic
             capture_code = f"""
@@ -77,7 +92,8 @@ import sys
 if __name__ == "__main__":
     try:
         import asyncio
-        results = asyncio.run(scrape_weather_data())
+        # Use the dynamically extracted function name with URLS and API_KEY from code
+        results = asyncio.run({func_name}(URLS, API_KEY))
         print("EXECUTION_RESULTS_START")
         print(json.dumps({{"success": True, "results": results}}))
         print("EXECUTION_RESULTS_END")

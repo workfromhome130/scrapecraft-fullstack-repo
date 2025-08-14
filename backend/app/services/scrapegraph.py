@@ -1,7 +1,6 @@
 from typing import List, Dict, Optional, Any
 import asyncio
 from scrapegraph_py import AsyncClient
-from pydantic import BaseModel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,21 +25,11 @@ class ScrapingService:
                 tasks = []
                 
                 for url in urls:
-                    # Create task for each URL
-                    if schema:
-                        # Convert schema dict to Pydantic model dynamically
-                        schema_model = self._create_pydantic_model(schema)
-                        task = client.smartscraper(
-                            website_url=url,
-                            user_prompt=prompt,
-                            output_schema=schema_model
-                        )
-                    else:
-                        task = client.smartscraper(
-                            website_url=url,
-                            user_prompt=prompt
-                        )
-                    
+                    # Create task for each URL using prompt-only extraction
+                    task = client.smartscraper(
+                        website_url=url,
+                        user_prompt=prompt
+                    )
                     tasks.append(task)
                 
                 # Execute all tasks concurrently
@@ -57,10 +46,19 @@ class ScrapingService:
                         })
                         logger.error(f"Scraping failed for {urls[i]}: {result}")
                     else:
+                        # Handle the API response format
+                        if isinstance(result, dict) and 'result' in result:
+                            # Extract the actual data from the 'result' field
+                            data = result.get('result', {})
+                        elif hasattr(result, 'model_dump'):
+                            data = result.model_dump()
+                        else:
+                            data = result
+                            
                         results.append({
                             "url": urls[i],
                             "success": True,
-                            "data": result,
+                            "data": data,
                             "error": None
                         })
                         logger.info(f"Successfully scraped {urls[i]}")
@@ -77,30 +75,6 @@ class ScrapingService:
         
         return results
     
-    def _create_pydantic_model(self, schema: Dict[str, Any]) -> type[BaseModel]:
-        """Dynamically create a Pydantic model from a schema dictionary."""
-        from pydantic import create_model
-        
-        # Convert schema dict to Pydantic field definitions
-        field_definitions = {}
-        for field_name, field_type in schema.items():
-            # Map string type names to Python types
-            if isinstance(field_type, str):
-                type_mapping = {
-                    'str': str,
-                    'int': int,
-                    'float': float,
-                    'bool': bool,
-                    'list': list,
-                    'dict': dict
-                }
-                field_type = type_mapping.get(field_type, str)
-            
-            # Create field with Optional type
-            field_definitions[field_name] = (Optional[field_type], None)
-        
-        # Create and return the model
-        return create_model('DynamicSchema', **field_definitions)
     
     async def search_urls(self, query: str, max_results: int = 5) -> List[Dict[str, str]]:
         """Search for URLs using ScrapeGraphAI SearchScraper."""
