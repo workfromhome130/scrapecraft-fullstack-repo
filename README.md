@@ -2,6 +2,9 @@
 
 ScrapeCraft is a web-based scraping editor similar to Cursor but specialized for web scraping. It uses AI assistance to help users build scraping pipelines with the ScrapeGraphAI API.
 
+https://github.com/user-attachments/assets/defaf7ad-23da-40b7-82cd-3b2a4d1d22c9
+
+
 ## Features
 
 - 🤖 AI-powered assistant using OpenRouter (Kimi-k2 model)
